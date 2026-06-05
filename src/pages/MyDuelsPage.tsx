@@ -11,18 +11,6 @@ function isLocked(kickoffAt: string) {
   return new Date() >= new Date(new Date(kickoffAt).getTime() - 60 * 60 * 1000)
 }
 
-function DuelMeta({ d }: { d: { match: { group_label: string | null, stage: string, kickoff_at: string, home_team: string | null, away_team: string | null, home_score: number | null, away_score: number | null } | null, matchId: number, opponentName: string } }) {
-  const m = d.match
-  const stageLabel = m ? `${m.group_label ? `Group ${m.group_label} · ` : ''}${STAGE_LABELS[m.stage] ?? m.stage}` : ''
-  const kickoff = m ? new Date(m.kickoff_at).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }) : ''
-  return (
-    <div className="flex-1 min-w-0">
-      <p className="text-xs text-muted-foreground">{stageLabel} · {kickoff}</p>
-      <p className="text-sm font-medium truncate">{m ? `${m.home_team ?? 'TBD'} ${m.home_score ?? '?'} – ${m.away_score ?? '?'} ${m.away_team ?? 'TBD'}` : `Match #${d.matchId}`}</p>
-      <p className="text-sm text-muted-foreground">vs {d.opponentName}</p>
-    </div>
-  )
-}
 
 function UpcomingMeta({ d }: { d: { match: { group_label: string | null, stage: string, kickoff_at: string, home_team: string | null, away_team: string | null } | null, matchId: number, opponentName: string, myPred: string | null } }) {
   const m = d.match

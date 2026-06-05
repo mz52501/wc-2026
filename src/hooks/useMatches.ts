@@ -17,7 +17,7 @@ export function useStandings(leagueId: number) {
           .eq('league_id', leagueId),
         supabase
           .from('league_members')
-          .select('user_id, profiles(display_name)')
+          .select('user_id, profiles(display_name, full_name)')
           .eq('league_id', leagueId),
       ])
       if (standingsErr) throw standingsErr
@@ -25,10 +25,15 @@ export function useStandings(leagueId: number) {
 
       const standingsMap = new Map((standingsData ?? []).map(s => [s.user_id, s]))
 
+      const fullNameMap = new Map((members ?? []).map(m => {
+        const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
+        return [m.user_id, (profile as { full_name?: string | null })?.full_name ?? null]
+      }))
+
       return (members ?? []).map(m => {
         const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
         const existing = standingsMap.get(m.user_id)
-        return existing ?? {
+        const base = existing ?? {
           user_id: m.user_id,
           display_name: profile?.display_name ?? 'Unknown',
           points: 0,
@@ -36,6 +41,7 @@ export function useStandings(leagueId: number) {
           draws: 0,
           losses: 0,
         }
+        return { ...base, full_name: fullNameMap.get(m.user_id) ?? null }
       }).sort((a, b) => b.points - a.points || b.wins - a.wins)
     },
   })

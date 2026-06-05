@@ -58,7 +58,10 @@ export function StandingsPage() {
             {standings.map((row, i) => (
               <tr key={row.user_id} className="border-b border-border last:border-0 hover:bg-muted/30">
                 <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
-                <td className="px-4 py-3 font-medium">{row.display_name}</td>
+                <td className="px-4 py-3">
+                  <p className="font-medium">{row.display_name}</p>
+                  {row.full_name && <p className="text-xs text-muted-foreground">{row.full_name}</p>}
+                </td>
                 <td className="px-3 py-3 text-center">{row.wins}</td>
                 <td className="px-3 py-3 text-center">{row.draws}</td>
                 <td className="px-3 py-3 text-center">{row.losses}</td>

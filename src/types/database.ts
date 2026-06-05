@@ -5,16 +5,19 @@ export type Database = {
         Row: {
           id: string
           display_name: string
+          full_name: string | null
           created_at: string
         }
         Insert: {
           id: string
           display_name: string
+          full_name?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           display_name?: string
+          full_name?: string | null
           created_at?: string
         }
       }
@@ -188,6 +191,8 @@ export type Database = {
         }
       }
     }
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
     Functions: {
       prediction_points: {
         Args: {
