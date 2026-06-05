@@ -65,8 +65,14 @@ export function useMyDuels(leagueId: number, userId: string) {
       if (matchesErr) throw matchesErr
       if (profilesErr) throw profilesErr
 
+      const matchIds = (duels ?? []).map(d => d.match_id)
+      const { data: predictions } = matchIds.length
+        ? await supabase.from('predictions').select('user_id, match_id, pred_home, pred_away').in('match_id', matchIds)
+        : { data: [] }
+
       const matchMap = new Map((matches ?? []).map(m => [m.id, m]))
       const profileMap = new Map((profiles ?? []).map(p => [p.id, p.display_name]))
+      const predMap = new Map((predictions ?? []).map(p => [`${p.user_id}_${p.match_id}`, p]))
 
       return (duels ?? [])
         .map(duel => {
@@ -77,12 +83,16 @@ export function useMyDuels(leagueId: number, userId: string) {
           const theirPoints = isPlayerA ? duel.points_b : duel.points_a
           const iWon = duel.winner === userId
           const theyWon = duel.winner === opponentId
+          const myPred = predMap.get(`${userId}_${duel.match_id}`)
+          const theirPred = predMap.get(`${opponentId}_${duel.match_id}`)
           return {
             matchId: duel.match_id,
             match,
             opponentName: profileMap.get(opponentId) ?? 'Unknown',
             myPoints,
             theirPoints,
+            myPred: myPred ? `${myPred.pred_home}-${myPred.pred_away}` : null,
+            theirPred: theirPred ? `${theirPred.pred_home}-${theirPred.pred_away}` : null,
             played: duel.played,
             iWon,
             isDraw: duel.played && duel.winner === null,
