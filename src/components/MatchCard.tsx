@@ -161,6 +161,7 @@ export function MatchCard({ match, prediction, score }: MatchCardProps) {
       <div className="flex sm:hidden items-center gap-3">
         {/* Left: teams + score stacked */}
         <div className="flex-1 min-w-0">
+          <p className="text-xs text-muted-foreground">{kickoffTime}</p>
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-sm font-medium truncate">{homeTeam}</span>
             <span className="text-xs text-muted-foreground shrink-0">v</span>
