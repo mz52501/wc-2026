@@ -3,6 +3,8 @@ import { RootLayout } from '@/components/RootLayout'
 import { MatchesPage } from '@/pages/MatchesPage'
 import { StandingsPage } from '@/pages/StandingsPage'
 import { MyDuelsPage } from '@/pages/MyDuelsPage'
+import { BonusPage } from '@/pages/BonusPage'
+import { RulesPage } from '@/pages/RulesPage'
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage'
 
 const rootRoute = createRootRoute({ component: RootLayout })
@@ -25,6 +27,18 @@ const myDuelsRoute = createRoute({
   component: MyDuelsPage,
 })
 
+const bonusRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/bonus',
+  component: BonusPage,
+})
+
+const rulesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/rules',
+  component: RulesPage,
+})
+
 const resetPasswordRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/reset-password',
@@ -35,6 +49,8 @@ export const routeTree = rootRoute.addChildren([
   matchesRoute,
   standingsRoute,
   myDuelsRoute,
+  bonusRoute,
+  rulesRoute,
   resetPasswordRoute,
 ])
 

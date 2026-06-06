@@ -59,13 +59,22 @@ export function StandingsPage() {
               <tr key={row.user_id} className="border-b border-border last:border-0 hover:bg-muted/30">
                 <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
                 <td className="px-4 py-3">
-                  <p className="font-medium">{row.display_name}</p>
-                  {row.full_name && <p className="text-xs text-muted-foreground">{row.full_name}</p>}
+                  <div className="flex items-center gap-2">
+                    <div>
+                      <p className="font-medium">{row.display_name}</p>
+                      {row.full_name && <p className="text-xs text-muted-foreground">{row.full_name}</p>}
+                    </div>
+                    {row.position_change !== null && row.position_change !== 0 && (
+                      <span className={`text-xs font-semibold shrink-0 ${row.position_change > 0 ? 'text-green-600' : 'text-destructive'}`}>
+                        {row.position_change > 0 ? `▲${row.position_change}` : `▼${Math.abs(row.position_change)}`}
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-3 py-3 text-center">{row.wins}</td>
                 <td className="px-3 py-3 text-center">{row.draws}</td>
                 <td className="px-3 py-3 text-center">{row.losses}</td>
-                <td className="px-3 py-3 text-center font-semibold">{row.points}</td>
+                <td className="px-3 py-3 text-center font-semibold">{row.total_points}</td>
               </tr>
             ))}
           </tbody>

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { circleMatchups } from '@/lib/matchups'
+import { calcBonusPoints } from '@/lib/fuzzyMatch'
 
 export function useStandings(leagueId: number) {
   return useQuery({
@@ -10,6 +11,10 @@ export function useStandings(leagueId: number) {
       const [
         { data: standingsData, error: standingsErr },
         { data: members, error: membersErr },
+        { data: bonusPreds, error: bonusPredsErr },
+        { data: bonusAnswers, error: bonusAnswersErr },
+        { data: snapshot },
+        { data: duelData },
       ] = await Promise.all([
         supabase
           .from('standings')
@@ -19,18 +24,41 @@ export function useStandings(leagueId: number) {
           .from('league_members')
           .select('user_id, profiles(display_name, full_name)')
           .eq('league_id', leagueId),
+        supabase
+          .from('bonus_predictions')
+          .select('user_id, winner, top_scorer, best_player')
+          .eq('league_id', leagueId),
+        supabase
+          .from('bonus_answers')
+          .select('winner, top_scorer, best_player')
+          .eq('id', 1)
+          .maybeSingle(),
+        supabase
+          .from('standings_snapshot')
+          .select('user_id, position')
+          .eq('league_id', leagueId),
+        supabase
+          .from('duel_results')
+          .select('player_a, player_b, points_a, points_b')
+          .eq('league_id', leagueId)
+          .eq('played', true),
       ])
       if (standingsErr) throw standingsErr
       if (membersErr) throw membersErr
+      if (bonusPredsErr) throw bonusPredsErr
+      if (bonusAnswersErr) throw bonusAnswersErr
 
       const standingsMap = new Map((standingsData ?? []).map(s => [s.user_id, s]))
+      const bonusPredMap = new Map((bonusPreds ?? []).map(p => [p.user_id, p]))
+      const snapshotMap = new Map((snapshot ?? []).map(s => [s.user_id, s.position]))
+      const duels = duelData ?? []
 
       const fullNameMap = new Map((members ?? []).map(m => {
         const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
         return [m.user_id, (profile as { full_name?: string | null })?.full_name ?? null]
       }))
 
-      return (members ?? []).map(m => {
+      const rows = (members ?? []).map(m => {
         const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
         const existing = standingsMap.get(m.user_id)
         const base = existing ?? {
@@ -41,8 +69,51 @@ export function useStandings(leagueId: number) {
           draws: 0,
           losses: 0,
         }
-        return { ...base, full_name: fullNameMap.get(m.user_id) ?? null }
-      }).sort((a, b) => b.points - a.points || b.wins - a.wins)
+        const bonus_points = calcBonusPoints(bonusPredMap.get(m.user_id), bonusAnswers ?? null)
+        return {
+          ...base,
+          full_name: fullNameMap.get(m.user_id) ?? null,
+          bonus_points,
+          total_points: base.points + bonus_points,
+          prev_position: snapshotMap.get(m.user_id) ?? null,
+        }
+      })
+
+      function h2hPts(userId: string, groupIds: string[]) {
+        const opponents = groupIds.filter(id => id !== userId)
+        return duels
+          .filter(d =>
+            (d.player_a === userId && opponents.includes(d.player_b)) ||
+            (d.player_b === userId && opponents.includes(d.player_a))
+          )
+          .reduce((sum, d) => sum + (d.player_a === userId ? d.points_a : d.points_b), 0)
+      }
+
+      // Sort: total points → H2H among tied → wins → Supabase order
+      rows.sort((a, b) => b.total_points - a.total_points)
+
+      const sorted: typeof rows = []
+      let i = 0
+      while (i < rows.length) {
+        let j = i + 1
+        while (j < rows.length && rows[j].total_points === rows[i].total_points) j++
+        const group = rows.slice(i, j)
+        if (group.length > 1) {
+          const groupIds = group.map(r => r.user_id)
+          group.sort((a, b) => {
+            const h2hDiff = h2hPts(b.user_id, groupIds) - h2hPts(a.user_id, groupIds)
+            if (h2hDiff !== 0) return h2hDiff
+            return b.wins - a.wins
+          })
+        }
+        sorted.push(...group)
+        i = j
+      }
+
+      return sorted.map((row, idx) => ({
+        ...row,
+        position_change: row.prev_position !== null ? row.prev_position - (idx + 1) : null,
+      }))
     },
   })
 }
@@ -197,6 +268,63 @@ export function useMatchupsExist(leagueId: number) {
       if (error) throw error
       return (count ?? 0) > 0
     },
+  })
+}
+
+export function useBonusPredictions(leagueId: number) {
+  return useQuery({
+    queryKey: ['bonus-predictions', leagueId],
+    queryFn: async () => {
+      const [
+        { data: preds, error: predsErr },
+        { data: answers, error: answersErr },
+        { data: members, error: membersErr },
+      ] = await Promise.all([
+        supabase.from('bonus_predictions').select('*').eq('league_id', leagueId),
+        supabase.from('bonus_answers').select('*').eq('id', 1).maybeSingle(),
+        supabase.from('league_members').select('user_id, profiles(display_name)').eq('league_id', leagueId),
+      ])
+      if (predsErr) throw predsErr
+      if (answersErr) throw answersErr
+      if (membersErr) throw membersErr
+
+      const predMap = new Map((preds ?? []).map(p => [p.user_id, p]))
+      const memberList = (members ?? []).map(m => {
+        const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
+        return { user_id: m.user_id, display_name: (profile as { display_name?: string } | null)?.display_name ?? 'Unknown' }
+      })
+
+      return { preds: predMap, answers: answers ?? null, members: memberList }
+    },
+  })
+}
+
+export function useSaveBonusPrediction(leagueId: number) {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { winner: string; top_scorer: string; best_player: string }) => {
+      const { error } = await supabase.from('bonus_predictions').upsert(
+        { user_id: user!.id, league_id: leagueId, ...data },
+        { onConflict: 'user_id,league_id' },
+      )
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bonus-predictions', leagueId] }),
+  })
+}
+
+export function useSaveBonusAnswers() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { winner: string; top_scorer: string; best_player: string }) => {
+      const { error } = await supabase.from('bonus_answers').upsert(
+        { id: 1, ...data },
+        { onConflict: 'id' },
+      )
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bonus-predictions'] }),
   })
 }
 

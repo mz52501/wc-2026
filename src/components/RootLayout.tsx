@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link, Outlet } from '@tanstack/react-router'
+import { Link, Outlet, useNavigate } from '@tanstack/react-router'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { LeagueFormOverlay } from '@/components/LeagueFormOverlay'
 
 export function RootLayout() {
   const { session, profile, activeLeague, leagues, switchLeague, loading } = useAuth()
+  const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [leagueAction, setLeagueAction] = useState<'create' | 'join' | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -78,6 +79,12 @@ export function RootLayout() {
                   >
                     Join with invite code
                   </button>
+                  <button
+                    onClick={() => { void navigate({ to: '/rules' }); setDropdownOpen(false) }}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors cursor-pointer text-muted-foreground sm:hidden"
+                  >
+                    Rules
+                  </button>
                 </div>
               </div>
             )}
@@ -93,6 +100,12 @@ export function RootLayout() {
             </Link>
             <Link to="/my-duels" className="text-sm text-muted-foreground hover:text-foreground [&.active]:text-foreground [&.active]:font-medium">
               My Duels
+            </Link>
+            <Link to="/bonus" className="text-sm text-muted-foreground hover:text-foreground [&.active]:text-foreground [&.active]:font-medium">
+              Bonus
+            </Link>
+            <Link to="/rules" className="text-sm text-muted-foreground hover:text-foreground [&.active]:text-foreground [&.active]:font-medium">
+              Rules
             </Link>
           </div>
 
@@ -139,6 +152,12 @@ export function RootLayout() {
             className="flex-1 flex flex-col items-center py-3 text-xs text-muted-foreground [&.active]:text-foreground [&.active]:font-medium"
           >
             My Duels
+          </Link>
+          <Link
+            to="/bonus"
+            className="flex-1 flex flex-col items-center py-3 text-xs text-muted-foreground [&.active]:text-foreground [&.active]:font-medium"
+          >
+            Bonus
           </Link>
         </div>
       </nav>

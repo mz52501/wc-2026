@@ -157,6 +157,75 @@ export type Database = {
           player_b?: string
         }
       }
+      bonus_predictions: {
+        Row: {
+          user_id: string
+          league_id: number
+          winner: string | null
+          top_scorer: string | null
+          best_player: string | null
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          league_id: number
+          winner?: string | null
+          top_scorer?: string | null
+          best_player?: string | null
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          league_id?: number
+          winner?: string | null
+          top_scorer?: string | null
+          best_player?: string | null
+          updated_at?: string
+        }
+      }
+      standings_snapshot: {
+        Row: {
+          league_id: number
+          user_id: string
+          position: number
+          snapped_at: string
+        }
+        Insert: {
+          league_id: number
+          user_id: string
+          position: number
+          snapped_at?: string
+        }
+        Update: {
+          league_id?: number
+          user_id?: string
+          position?: number
+          snapped_at?: string
+        }
+      }
+      bonus_answers: {
+        Row: {
+          id: number
+          winner: string | null
+          top_scorer: string | null
+          best_player: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          winner?: string | null
+          top_scorer?: string | null
+          best_player?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          winner?: string | null
+          top_scorer?: string | null
+          best_player?: string | null
+          updated_at?: string
+        }
+      }
     }
     Views: {
       prediction_scores: {
