@@ -328,6 +328,60 @@ export function useSaveBonusAnswers() {
   })
 }
 
+export function useMatchLeaguePredictions(leagueId: number, matchId: number, userId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['match-league-predictions', leagueId, matchId, userId],
+    queryFn: async () => {
+      const [
+        { data: members, error: membersErr },
+        { data: matchup },
+      ] = await Promise.all([
+        supabase.from('league_members').select('user_id, profiles(display_name)').eq('league_id', leagueId),
+        supabase.from('matchups').select('player_a, player_b')
+          .eq('league_id', leagueId)
+          .eq('match_id', matchId)
+          .or(`player_a.eq.${userId},player_b.eq.${userId}`)
+          .maybeSingle(),
+      ])
+      if (membersErr) throw membersErr
+
+      const opponentId = matchup
+        ? (matchup.player_a === userId ? matchup.player_b : matchup.player_a)
+        : null
+
+      const memberIds = (members ?? []).map(m => m.user_id)
+      const { data: preds, error: predsErr } = await supabase
+        .from('predictions')
+        .select('user_id, pred_home, pred_away')
+        .eq('match_id', matchId)
+        .in('user_id', memberIds)
+      if (predsErr) throw predsErr
+
+      const predMap = new Map((preds ?? []).map(p => [p.user_id, p]))
+      const rows = (members ?? []).map(m => {
+        const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
+        const pred = predMap.get(m.user_id)
+        return {
+          user_id: m.user_id,
+          display_name: (profile as { display_name?: string } | null)?.display_name ?? 'Unknown',
+          pred: pred ? `${pred.pred_home}–${pred.pred_away}` : null,
+        }
+      })
+
+      rows.sort((a, b) => {
+        if (a.user_id === userId) return -1
+        if (b.user_id === userId) return 1
+        if (a.user_id === opponentId) return -1
+        if (b.user_id === opponentId) return 1
+        return 0
+      })
+
+      return rows
+    },
+    enabled: enabled && !!userId,
+  })
+}
+
 export function useGenerateMatchups(leagueId: number) {
   const queryClient = useQueryClient()
 

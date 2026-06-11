@@ -1,5 +1,6 @@
 import { useMatches, useMyPredictions, useMyScores } from '@/hooks/useMatches'
 import { MatchCard } from '@/components/MatchCard'
+import { useAuth } from '@/contexts/AuthContext'
 import type { Database } from '@/types/database'
 
 type Match = Database['public']['Tables']['matches']['Row']
@@ -30,6 +31,7 @@ function groupByDate(matches: Match[]): [string, Match[]][] {
 }
 
 export function MatchesPage() {
+  const { activeLeague } = useAuth()
   const { data: matches, isLoading: matchesLoading } = useMatches()
   const { data: predictions, isLoading: predsLoading } = useMyPredictions()
   const { data: scores } = useMyScores()
@@ -61,6 +63,7 @@ export function MatchesPage() {
                 match={match}
                 prediction={predMap.get(match.id)}
                 score={scoreMap.get(match.id)}
+                leagueId={activeLeague?.id}
               />
             ))}
           </div>

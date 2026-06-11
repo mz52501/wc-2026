@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { useSavePrediction } from '@/hooks/useMatches'
+import { useSavePrediction, useMatchLeaguePredictions } from '@/hooks/useMatches'
+import { useAuth } from '@/contexts/AuthContext'
 import type { Database } from '@/types/database'
 
 type Match = Database['public']['Tables']['matches']['Row']
@@ -24,15 +25,47 @@ interface MatchCardProps {
   match: Match
   prediction?: Prediction
   score?: Score
+  leagueId?: number
 }
 
-export function MatchCard({ match, prediction, score }: MatchCardProps) {
+function LeaguePicks({ leagueId, matchId }: { leagueId: number; matchId: number }) {
+  const { user } = useAuth()
+  const { data, isLoading } = useMatchLeaguePredictions(leagueId, matchId, user?.id ?? '', !!user)
+  if (isLoading) return <p className="text-xs text-muted-foreground mt-2 pl-1">Loading...</p>
+  return (
+    <div className="mt-2 rounded-md bg-muted/40 overflow-hidden">
+      <div className="flex justify-between px-3 py-1.5 border-b border-border">
+        <span className="text-xs font-medium text-muted-foreground">Player</span>
+        <span className="text-xs font-medium text-muted-foreground">Pick</span>
+      </div>
+      {(data ?? []).map(member => {
+        const isMe = member.user_id === user?.id
+        return (
+          <div
+            key={member.user_id}
+            className={`flex justify-between items-center px-3 py-1.5 text-xs border-b border-border/50 last:border-0 ${isMe ? 'bg-muted/60' : ''}`}
+          >
+            <span className={isMe ? 'font-semibold' : 'text-muted-foreground'}>
+              {member.display_name}
+            </span>
+            <span className="font-semibold tabular-nums">
+              {member.pred ?? <span className="text-muted-foreground font-normal italic">no pick</span>}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+export function MatchCard({ match, prediction, score, leagueId }: MatchCardProps) {
   const isLocked = new Date() >= new Date(new Date(match.kickoff_at).getTime() - 60 * 60 * 1000)
   const hasResult = match.home_score !== null && match.away_score !== null
 
   const [home, setHome] = useState(prediction?.pred_home?.toString() ?? '0')
   const [away, setAway] = useState(prediction?.pred_away?.toString() ?? '0')
   const [savedBriefly, setSavedBriefly] = useState(false)
+  const [picksExpanded, setPicksExpanded] = useState(false)
 
   const { mutate: save, isPending } = useSavePrediction()
 
@@ -99,7 +132,7 @@ export function MatchCard({ match, prediction, score }: MatchCardProps) {
       disabled={!isValidInput || isPending}
       onClick={handleSave}
     >
-      {isPending ? '...' : savedBriefly ? 'Saved' : 'Save'}
+      {isPending ? '...' : savedBriefly ? 'Saved' : prediction ? 'Update' : 'Save'}
     </Button>
   )
 
@@ -172,6 +205,22 @@ export function MatchCard({ match, prediction, score }: MatchCardProps) {
         {/* Right: save or points */}
         <div className="shrink-0">{isLocked ? lockedRight : saveButton}</div>
       </div>
+
+      {/* ── League picks toggle (locked only) ── */}
+      {isLocked && leagueId && (
+        <div className="mt-2">
+          <button
+            onClick={() => setPicksExpanded(e => !e)}
+            className={`flex items-center gap-1.5 text-xs transition-colors ${picksExpanded ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {picksExpanded ? 'hide picks' : 'see all picks'}
+          </button>
+          {picksExpanded && <LeaguePicks leagueId={leagueId} matchId={match.id} />}
+        </div>
+      )}
     </div>
   )
 }
