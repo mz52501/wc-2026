@@ -116,11 +116,6 @@ export function MatchCard({ match, prediction, score, leagueId }: MatchCardProps
       ) : (
         <p className="text-xs text-muted-foreground">no pick</p>
       )}
-      {score?.points !== null && score?.points !== undefined && (
-        <p className="text-xs text-muted-foreground">
-          {score.points} pt{score.points !== 1 ? 's' : ''}
-        </p>
-      )}
     </div>
   )
 
