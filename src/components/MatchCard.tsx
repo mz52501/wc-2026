@@ -48,8 +48,9 @@ function LeaguePicks({ leagueId, matchId }: { leagueId: number; matchId: number 
             <span className={isMe ? 'font-semibold' : 'text-muted-foreground'}>
               {member.display_name}
             </span>
-            <span className="font-semibold tabular-nums">
+            <span className="font-semibold tabular-nums flex items-center gap-1">
               {member.pred ?? <span className="text-muted-foreground font-normal italic">no pick</span>}
+              {member.isAuto && member.pred && <span className="text-[10px] text-muted-foreground font-normal">auto</span>}
             </span>
           </div>
         )
@@ -108,7 +109,9 @@ export function MatchCard({ match, prediction, score, leagueId }: MatchCardProps
     <div className="text-right">
       {prediction ? (
         <>
-          <p className="text-xs text-muted-foreground leading-none mb-0.5">your pick</p>
+          <p className="text-xs text-muted-foreground leading-none mb-0.5">
+            {prediction.is_auto ? 'auto pick' : 'your pick'}
+          </p>
           <p className="text-sm font-semibold tabular-nums">
             {prediction.pred_home}–{prediction.pred_away}
           </p>

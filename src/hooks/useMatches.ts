@@ -144,7 +144,7 @@ export function useMyDuels(leagueId: number, userId: string) {
 
       const matchIds = (duels ?? []).map(d => d.match_id)
       const { data: predictions } = matchIds.length
-        ? await supabase.from('predictions').select('user_id, match_id, pred_home, pred_away').in('match_id', matchIds)
+        ? await supabase.from('predictions').select('user_id, match_id, pred_home, pred_away, is_auto').in('match_id', matchIds)
         : { data: [] }
 
       const matchMap = new Map((matches ?? []).map(m => [m.id, m]))
@@ -169,7 +169,9 @@ export function useMyDuels(leagueId: number, userId: string) {
             myPoints,
             theirPoints,
             myPred: myPred ? `${myPred.pred_home}-${myPred.pred_away}` : null,
+            myPredIsAuto: myPred?.is_auto ?? false,
             theirPred: theirPred ? `${theirPred.pred_home}-${theirPred.pred_away}` : null,
+            theirPredIsAuto: theirPred?.is_auto ?? false,
             played: duel.played,
             iWon,
             isDraw: duel.played && duel.winner === null,
@@ -352,7 +354,7 @@ export function useMatchLeaguePredictions(leagueId: number, matchId: number, use
       const memberIds = (members ?? []).map(m => m.user_id)
       const { data: preds, error: predsErr } = await supabase
         .from('predictions')
-        .select('user_id, pred_home, pred_away')
+        .select('user_id, pred_home, pred_away, is_auto')
         .eq('match_id', matchId)
         .in('user_id', memberIds)
       if (predsErr) throw predsErr
@@ -365,6 +367,7 @@ export function useMatchLeaguePredictions(leagueId: number, matchId: number, use
           user_id: m.user_id,
           display_name: (profile as { display_name?: string } | null)?.display_name ?? 'Unknown',
           pred: pred ? `${pred.pred_home}–${pred.pred_away}` : null,
+          isAuto: pred?.is_auto ?? false,
         }
       })
 

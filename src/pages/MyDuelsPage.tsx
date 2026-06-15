@@ -58,7 +58,7 @@ export function MyDuelsPage() {
                   <p className="text-xs text-muted-foreground">{stageLabel} · {kickoff}</p>
                   <div className="flex items-center justify-between gap-2">
                     <div className="text-left">
-                      <p className="text-xs text-muted-foreground mb-0.5">You</p>
+                      <p className="text-xs text-muted-foreground mb-0.5">You{d.myPredIsAuto && <span className="ml-1 text-[10px]">auto</span>}</p>
                       <p className="text-lg font-bold tabular-nums">{d.myPred ?? '?'}</p>
                     </div>
                     <div className="text-center flex-1">
@@ -93,7 +93,7 @@ export function MyDuelsPage() {
                   <p className="text-xs text-muted-foreground">{stageLabel} · {kickoff}</p>
                   <div className="flex items-center justify-between gap-2">
                     <div className="text-left">
-                      <p className="text-xs text-muted-foreground mb-0.5">You</p>
+                      <p className="text-xs text-muted-foreground mb-0.5">You{d.myPredIsAuto && <span className="ml-1 text-[10px]">auto</span>}</p>
                       <p className="text-lg font-bold tabular-nums">{d.myPred ?? '?'}</p>
                     </div>
                     <div className="text-center flex-1">

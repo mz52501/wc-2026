@@ -113,6 +113,7 @@ export type Database = {
           pred_home: number
           pred_away: number
           pred_advancing: string | null
+          is_auto: boolean
           updated_at: string
         }
         Insert: {
@@ -122,6 +123,7 @@ export type Database = {
           pred_home: number
           pred_away: number
           pred_advancing?: string | null
+          is_auto?: boolean
           updated_at?: string
         }
         Update: {
@@ -131,6 +133,7 @@ export type Database = {
           pred_home?: number
           pred_away?: number
           pred_advancing?: string | null
+          is_auto?: boolean
           updated_at?: string
         }
       }
@@ -271,6 +274,10 @@ export type Database = {
           a_away: number
         }
         Returns: number | null
+      }
+      generate_auto_predictions: {
+        Args: Record<string, never>
+        Returns: void
       }
     }
   }

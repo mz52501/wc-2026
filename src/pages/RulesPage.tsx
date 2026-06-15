@@ -66,6 +66,17 @@ export function RulesPage() {
       </div>
 
       <div>
+        <h2 className="text-sm font-semibold mb-2">Missed predictions</h2>
+        <p className="text-sm text-muted-foreground">
+          If you forget to submit a prediction before the lock, one is automatically assigned to you
+          based on what the rest of the league predicted. It is randomly picked from the pool of
+          submitted predictions, so popular scores are more likely to be assigned than rare ones.
+          These show up as <span className="font-medium text-foreground">auto</span> in your picks
+          and duels.
+        </p>
+      </div>
+
+      <div>
         <h2 className="text-sm font-semibold mb-2">Bonus predictions</h2>
         <p className="text-sm text-muted-foreground mb-3">
           Before the tournament starts, every player picks the tournament winner, top scorer, and
