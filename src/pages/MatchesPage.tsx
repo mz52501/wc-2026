@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react'
 import { useMatches, useMyPredictions, useMyScores } from '@/hooks/useMatches'
 import { MatchCard } from '@/components/MatchCard'
 import { useAuth } from '@/contexts/AuthContext'
@@ -35,6 +36,14 @@ export function MatchesPage() {
   const { data: matches, isLoading: matchesLoading } = useMatches()
   const { data: predictions, isLoading: predsLoading } = useMyPredictions()
   const { data: scores } = useMyScores()
+  const firstUnplayedRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!matchesLoading && !predsLoading && firstUnplayedRef.current) {
+      const top = firstUnplayedRef.current.getBoundingClientRect().top + window.scrollY - 72
+      window.scrollTo({ top, behavior: 'smooth' })
+    }
+  }, [matchesLoading, predsLoading])
 
   if (matchesLoading || predsLoading) {
     return <p className="text-muted-foreground text-sm">Loading matches...</p>
@@ -48,11 +57,14 @@ export function MatchesPage() {
   const scoreMap = new Map((scores ?? []).map(s => [s.match_id, s]))
 
   const grouped = groupByDate(matches)
+  const firstUnplayedGroupIndex = grouped.findIndex(([, dayMatches]) =>
+    dayMatches.some(m => m.home_score === null || m.away_score === null)
+  )
 
   return (
     <div className="space-y-8">
-      {grouped.map(([dateKey, dayMatches]) => (
-        <div key={dateKey}>
+      {grouped.map(([dateKey, dayMatches], index) => (
+        <div key={dateKey} ref={index === firstUnplayedGroupIndex ? firstUnplayedRef : undefined}>
           <h2 className="text-sm font-semibold text-muted-foreground mb-3">
             {localDateLabel(dayMatches[0].kickoff_at)}
           </h2>

@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useMyDuels } from '@/hooks/useMatches'
 
@@ -33,6 +34,14 @@ function UpcomingMeta({ d }: { d: { match: { group_label: string | null, stage: 
 export function MyDuelsPage() {
   const { activeLeague, user } = useAuth()
   const { data: duels, isLoading } = useMyDuels(activeLeague!.id, user!.id)
+  const firstActiveRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (!isLoading && firstActiveRef.current) {
+      const top = firstActiveRef.current.getBoundingClientRect().top + window.scrollY - 72
+      window.scrollTo({ top, behavior: 'smooth' })
+    }
+  }, [isLoading])
 
   if (isLoading) return <p className="text-muted-foreground text-sm">Loading duels...</p>
   if (!duels?.length) return <p className="text-muted-foreground text-sm">No duels yet — matchups are generated before the tournament starts.</p>
@@ -80,7 +89,7 @@ export function MyDuelsPage() {
       )}
 
       {locked.length > 0 && (
-        <section>
+        <section ref={firstActiveRef}>
           <h2 className="text-sm font-semibold text-muted-foreground mb-3">In progress</h2>
           <div className="rounded-lg border border-border bg-card divide-y divide-border">
             {locked.map(d => {
@@ -112,7 +121,7 @@ export function MyDuelsPage() {
       )}
 
       {upcoming.length > 0 && (
-        <section>
+        <section ref={locked.length === 0 ? firstActiveRef : undefined}>
           <h2 className="text-sm font-semibold text-muted-foreground mb-3">Upcoming</h2>
           <div className="rounded-lg border border-border bg-card divide-y divide-border">
             {upcoming.map(d => (

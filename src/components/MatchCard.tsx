@@ -49,8 +49,8 @@ function LeaguePicks({ leagueId, matchId }: { leagueId: number; matchId: number 
               {member.display_name}
             </span>
             <span className="font-semibold tabular-nums flex items-center gap-1">
-              {member.pred ?? <span className="text-muted-foreground font-normal italic">no pick</span>}
               {member.isAuto && member.pred && <span className="text-[10px] text-muted-foreground font-normal">auto</span>}
+              {member.pred ?? <span className="text-muted-foreground font-normal italic">no pick</span>}
             </span>
           </div>
         )
