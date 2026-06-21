@@ -259,6 +259,34 @@ export function useSavePrediction() {
   })
 }
 
+export function useUpdateMatchResult() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      matchId,
+      homeScore,
+      awayScore,
+    }: {
+      matchId: number
+      homeScore: number | null
+      awayScore: number | null
+    }) => {
+      const { error } = await supabase
+        .from('matches')
+        .update({ home_score: homeScore, away_score: awayScore })
+        .eq('id', matchId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['matches'] })
+      queryClient.invalidateQueries({ queryKey: ['scores'] })
+      queryClient.invalidateQueries({ queryKey: ['standings'] })
+      queryClient.invalidateQueries({ queryKey: ['duels'] })
+    },
+  })
+}
+
 export function useMatchupsExist(leagueId: number) {
   return useQuery({
     queryKey: ['matchups-exist', leagueId],

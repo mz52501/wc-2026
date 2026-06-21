@@ -7,9 +7,11 @@ import { LoginPage } from '@/pages/LoginPage'
 import { SetupPage } from '@/pages/SetupPage'
 import { LeagueSetupPage } from '@/pages/LeagueSetupPage'
 import { LeagueFormOverlay } from '@/components/LeagueFormOverlay'
+import { isAdmin } from '@/lib/admin'
 
 export function RootLayout() {
   const { session, profile, activeLeague, leagues, switchLeague, loading } = useAuth()
+  const admin = isAdmin(session?.user?.email)
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [leagueAction, setLeagueAction] = useState<'create' | 'join' | null>(null)
@@ -85,6 +87,14 @@ export function RootLayout() {
                   >
                     Rules
                   </button>
+                  {admin && (
+                    <button
+                      onClick={() => { void navigate({ to: '/results' }); setDropdownOpen(false) }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors cursor-pointer text-muted-foreground sm:hidden"
+                    >
+                      Results
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -107,6 +117,11 @@ export function RootLayout() {
             <Link to="/rules" className="text-sm text-muted-foreground hover:text-foreground [&.active]:text-foreground [&.active]:font-medium">
               Rules
             </Link>
+            {admin && (
+              <Link to="/results" className="text-sm text-muted-foreground hover:text-foreground [&.active]:text-foreground [&.active]:font-medium">
+                Results
+              </Link>
+            )}
           </div>
 
           <div className="ml-auto flex items-center gap-3">
@@ -159,6 +174,14 @@ export function RootLayout() {
           >
             Bonus
           </Link>
+          {admin && (
+            <Link
+              to="/results"
+              className="flex-1 flex flex-col items-center py-3 text-xs text-muted-foreground [&.active]:text-foreground [&.active]:font-medium"
+            >
+              Results
+            </Link>
+          )}
         </div>
       </nav>
     </div>
