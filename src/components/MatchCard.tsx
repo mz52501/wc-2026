@@ -68,12 +68,22 @@ export function MatchCard({ match, prediction, score, leagueId }: MatchCardProps
   const [savedBriefly, setSavedBriefly] = useState(false)
   const [picksExpanded, setPicksExpanded] = useState(false)
 
-  const { mutate: save, isPending } = useSavePrediction()
+  const { mutate: save, isPending, isError, reset } = useSavePrediction()
 
   useEffect(() => {
     setHome(prediction?.pred_home?.toString() ?? '0')
     setAway(prediction?.pred_away?.toString() ?? '0')
   }, [prediction])
+
+  function handleHomeChange(v: string) {
+    setHome(v)
+    if (isError) reset()
+  }
+
+  function handleAwayChange(v: string) {
+    setAway(v)
+    if (isError) reset()
+  }
 
   function handleSave() {
     const h = parseInt(home)
@@ -125,12 +135,12 @@ export function MatchCard({ match, prediction, score, leagueId }: MatchCardProps
   const saveButton = (
     <Button
       size="sm"
-      variant={savedBriefly ? 'outline' : 'default'}
+      variant={isError ? 'destructive' : savedBriefly ? 'outline' : 'default'}
       className="h-8 text-xs"
       disabled={!isValidInput || isPending}
       onClick={handleSave}
     >
-      {isPending ? '...' : savedBriefly ? 'Saved' : prediction ? 'Update' : 'Save'}
+      {isPending ? '...' : isError ? 'Retry' : savedBriefly ? 'Saved' : prediction ? 'Update' : 'Save'}
     </Button>
   )
 
@@ -153,7 +163,7 @@ export function MatchCard({ match, prediction, score, leagueId }: MatchCardProps
         min={0}
         max={99}
         value={home}
-        onChange={e => setHome(e.target.value)}
+        onChange={e => handleHomeChange(e.target.value)}
         className="w-12 h-8 text-center text-sm px-1"
         placeholder="0"
       />
@@ -163,7 +173,7 @@ export function MatchCard({ match, prediction, score, leagueId }: MatchCardProps
         min={0}
         max={99}
         value={away}
-        onChange={e => setAway(e.target.value)}
+        onChange={e => handleAwayChange(e.target.value)}
         className="w-12 h-8 text-center text-sm px-1"
         placeholder="0"
       />
