@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useBonusPredictions, useSaveBonusPrediction, useSaveBonusAnswers } from '@/hooks/useMatches'
 import { Button } from '@/components/ui/button'
+import { fuzzyMatch } from '@/lib/fuzzyMatch'
 
 // WC 2026 first kickoff June 11 19:00 UTC
 const LOCK_AT = new Date('2026-06-11T19:00:00Z')
@@ -68,7 +69,7 @@ export function BonusPage() {
 
   function hit(field: Field) {
     if (!answers?.[field] || !myPred?.[field]) return null
-    return myPred[field]?.toLowerCase().trim() === answers[field]?.toLowerCase().trim()
+    return fuzzyMatch(myPred[field]!, answers[field]!)
   }
 
   if (isLoading) return <p className="text-muted-foreground text-sm">Loading...</p>

@@ -340,7 +340,10 @@ export function useSaveBonusPrediction(leagueId: number) {
       )
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bonus-predictions', leagueId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bonus-predictions', leagueId] })
+      queryClient.invalidateQueries({ queryKey: ['standings', leagueId] })
+    },
   })
 }
 
@@ -354,7 +357,10 @@ export function useSaveBonusAnswers() {
       )
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bonus-predictions'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bonus-predictions'] })
+      queryClient.invalidateQueries({ queryKey: ['standings'] })
+    },
   })
 }
 
